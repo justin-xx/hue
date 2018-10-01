@@ -104,6 +104,21 @@ module Hue
         end
       end
     end
+    
+    def motion_sensors
+      begin
+        json = JSON(Net::HTTP.get(URI.parse("#{base_url}/sensors")))
+    
+        json.map { |id, data|
+          if data["state"]["presence"] != nil
+            MotionSensor.new(@client, self, id, data)     
+          else
+            nil
+          end          
+          
+        }.compact # reject the nil's (i.e. sensors that are not motion detectors)
+      end
+    end
 
   private
 

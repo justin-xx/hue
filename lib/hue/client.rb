@@ -79,6 +79,10 @@ module Hue
       id = id.to_s
       scenes.select { |s| s.id == id }.first
     end
+    
+    def motion_sensors
+      bridge.motion_sensors
+    end
 
     private
 
