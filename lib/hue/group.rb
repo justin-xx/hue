@@ -45,6 +45,10 @@ module Hue
     # A fixed name describing the type of group.
     attr_reader :type
 
+    attr_accessor :all_on
+    
+    attr_accessor :any_on
+    
     def initialize(client, bridge, id = nil, data = {})
       @client = client
       @bridge = bridge
@@ -150,10 +154,16 @@ module Hue
       :name => :name,
       :light_ids => :lights,
       :type => :type,
-      :state => :action
+      :state => :state,
+      :action => :action
     }
 
     STATE_KEYS_MAP = {
+      :all_on => :all_on,
+      :any_on => :any_on,
+    }
+    
+    ACTION_KEYS_MAP = {
       :on => :on,
       :brightness => :bri,
       :hue => :hue,
@@ -170,6 +180,7 @@ module Hue
 
       unless new?
         unpack_hash(@state, STATE_KEYS_MAP)
+        unpack_hash(@action, ACTION_KEYS_MAP)
         @x, @y = @state['xy']
       end
     end
