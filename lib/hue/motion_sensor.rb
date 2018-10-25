@@ -28,6 +28,16 @@ module Hue
       json = JSON(Net::HTTP.get(URI.parse(base_url)))
       unpack(json)
     end
+    
+    def hue_attributes
+      {
+        identifier:        self.id,
+        name:              self.name,
+        hue_device_type:   self.hue_device_type,
+        updated_at:        self.updated_at,
+        presence:          self.presence,
+      }
+    end
 
   private
 
