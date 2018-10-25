@@ -17,7 +17,7 @@ module Hue
     # A unique, editable name given to the light.
     attr_accessor :name
 
-    # Hue of the light. This is a wrapping value between 0 and 65535.
+    # Hue of the lightsght. This is a wrapping value between 0 and 65535.
     # Both 0 and 65535 are red, 25500 is green and 46920 is blue.
     attr_reader :hue
 
@@ -133,13 +133,47 @@ module Hue
       response = http.request_put(uri.path, JSON.dump(body))
       JSON(response.body)
     end
-
+    
+    def set_recipe(recipe = 'bright')
+      recipe_name = (!self.bloom? ? recipe.upcase : '_BLOOM' + recipe.upcase).to_sym
+      return unless Hue::Recipe.constants.include?(recipe_name)
+      set_state(Hue::Recipe.const_get(recipe_name))
+    end
+    
+    def set_brightness(percentage = 50)
+      percentage = 50 unless percentage.to_f <= 100 && percentage.to_f >= 0
+      set_state({:brightness => ((percentage.to_f/100.0)*255).to_i})
+    end
+    
+    def set_off
+      set_state({:on => false})
+    end
+    
     # Refresh the state of the lamp
     def refresh
       json = JSON(Net::HTTP.get(URI.parse(base_url)))
       unpack(json)
     end
-
+    
+    def hue_attributes
+      {
+        identifier:        self.id,
+        name:              self.name,
+        hue:               self.hue,
+        saturation:        self.saturation,
+        brightness:        self.brightness,
+        x:                 self.x, 
+        y:                 self.y,         
+        color_temperature: self.color_temperature,                 
+        color_mode:        self.color_mode,                         
+        type:              self.type,                                 
+        model:             self.model
+      }
+    end
+    
+    def bloom?
+      /Bloom/.match(self.name) || /Color light/.match(self.type)
+    end
   private
 
     KEYS_MAP = {
@@ -173,5 +207,7 @@ module Hue
     def base_url
       "http://#{@bridge.ip}/api/#{@client.username}/lights/#{id}"
     end
+    
+
   end
 end

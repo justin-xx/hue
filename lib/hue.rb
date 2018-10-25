@@ -8,6 +8,7 @@ require 'hue/light'
 require 'hue/group'
 require 'hue/scene'
 require 'hue/motion_sensor'
+require 'hue/recipe'
 
 module Hue
   USERNAME_RANGE = 10..40
