@@ -123,32 +123,103 @@ module Hue
     #   defaults to 4 (400ms). For example, setting transistiontime:10 will
     #   make the transition last 1 second.
     def set_state(attributes, transition = nil)
+      puts
+      puts "set_state called on #{self.id}"
+      
+      time1 = Time.now.utc
       body = translate_keys(attributes, STATE_KEYS_MAP)
-
+      puts "Translating took #{Time.now.utc-time1} seconds"
+      
       # Add transition
+      time1 = Time.now.utc
       body.merge!({:transitiontime => transition}) if transition
-
+      puts "Transition took #{Time.now.utc-time1} seconds"
+      
+      time1 = Time.now.utc      
       uri = URI.parse("#{base_url}/state")
       http = Net::HTTP.new(uri.host)
       response = http.request_put(uri.path, JSON.dump(body))
+      puts "Posting took #{Time.now.utc-time1} seconds"      
       JSON(response.body)
     end
     
-    def set_recipe(recipe = 'bright')
-      recipe_name = (!self.bloom? ? recipe.upcase : '_BLOOM' + recipe.upcase).to_sym
-      return unless Hue::Recipe.constants.include?(recipe_name)
-      set_state(Hue::Recipe.const_get(recipe_name))
+    def set_to(recipe)
+      case recipe
+      when :bright
+        set_to_bright
+      when :concentrate
+        set_to_concentrate
+      when :dim
+        set_to_dim
+      when :off
+        set_to_off  
+      when :read
+        set_to_read
+      when :night_light
+        set_to_night_light
+      else
+        puts "Enter a valid recipe: bright, concentrate, dim, off, or read"
+        nil
+      end
+    end
+    
+    def set_to_bright
+      set_state({
+        :on => true,
+        :saturation => 254,
+        :brightness => 254,
+        :color_temperature => 300,
+        :colormode => "ct"
+      })
+    end
+    
+    def set_to_concentrate      
+      set_state({
+        :on => true,
+        :saturation => 254,
+        :brightness => 254, 
+        :color_temperature => 233, 
+        :colormode => "ct"
+      })
+    end
+    
+    def set_to_dim
+      set_state({
+        :on => true, 
+        :brightness => 62, 
+        :color_temperature => 447, 
+        :colormode => "ct"
+      })
+    end
+    
+    def set_to_night_light
+      set_state({
+        :on => true, 
+        :brightness => 1, 
+        :color_temperature => 300, 
+        :colormode => "ct"
+      })
+    end
+    
+    def set_to_off
+      set_state({:on => false})
+    end    
+    
+    def set_to_read
+      set_state({
+        :on => true,
+        :saturation => nil,
+        :brightness => 220, 
+        :color_temperature => 343, 
+        :colormode => "ct"
+      })
     end
     
     def set_brightness(percentage = 50)
       percentage = 50 unless percentage.to_f <= 100 && percentage.to_f >= 0
       set_state({:brightness => ((percentage.to_f/100.0)*255).to_i})
     end
-    
-    def set_off
-      set_state({:on => false})
-    end
-    
+
     # Refresh the state of the lamp
     def refresh
       json = JSON(Net::HTTP.get(URI.parse(base_url)))
@@ -171,9 +242,6 @@ module Hue
       }
     end
     
-    def bloom?
-      /Bloom/.match(self.name) || /Color light/.match(self.type)
-    end
   private
 
     KEYS_MAP = {

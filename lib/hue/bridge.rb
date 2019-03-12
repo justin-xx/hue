@@ -73,9 +73,22 @@ module Hue
 
     def lights
       @lights ||= begin
+        time1 = Time.now.utc
         json = JSON(Net::HTTP.get(URI.parse(base_url)))
+        puts "Downloading took #{Time.now.utc-time1} seconds"
         json['lights'].map do |key, value|
-          Light.new(@client, self, key, value)
+          case value['type']
+          when 'Dimmable light' # white only
+            LightDimmable.new(@client, self, key, value) 
+          when 'Color temperature light' # white ambiance
+            LightWhiteAmbiance.new(@client, self, key, value)
+          when 'Color light' # bloom
+            LightBloom.new(@client, self, key, value)
+          when 'Extended color light' # full color
+            LightExtendedColor.new(@client, self, key, value)
+          else  
+            Light.new(@client, self, key, value)
+          end
         end
       end
     end
