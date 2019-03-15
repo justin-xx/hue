@@ -75,7 +75,7 @@ module Hue
       @lights ||= begin
         time1 = Time.now.utc
         json = JSON(Net::HTTP.get(URI.parse(base_url)))
-        puts "Downloading took #{Time.now.utc-time1} seconds"
+        
         json['lights'].map do |key, value|
           case value['type']
           when 'Dimmable light' # white only

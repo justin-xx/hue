@@ -123,23 +123,15 @@ module Hue
     #   defaults to 4 (400ms). For example, setting transistiontime:10 will
     #   make the transition last 1 second.
     def set_state(attributes, transition = nil)
-      puts
-      puts "set_state called on #{self.id}"
-      
       time1 = Time.now.utc
-      body = translate_keys(attributes, STATE_KEYS_MAP)
-      puts "Translating took #{Time.now.utc-time1} seconds"
-      
+      body = translate_keys(attributes, STATE_KEYS_MAP)      
       # Add transition
       time1 = Time.now.utc
-      body.merge!({:transitiontime => transition}) if transition
-      puts "Transition took #{Time.now.utc-time1} seconds"
-      
+      body.merge!({:transitiontime => transition}) if transition      
       time1 = Time.now.utc      
       uri = URI.parse("#{base_url}/state")
       http = Net::HTTP.new(uri.host)
       response = http.request_put(uri.path, JSON.dump(body))
-      puts "Posting took #{Time.now.utc-time1} seconds"      
       JSON(response.body)
     end
     
@@ -167,7 +159,7 @@ module Hue
       set_state({
         :on => true,
         :saturation => 254,
-        :brightness => 254,
+        :brightness => /Office Table Lamp/.match?(self.name) ? 254 * 0.6 : 254,
         :color_temperature => 300,
         :colormode => "ct"
       })
